@@ -1,0 +1,277 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 15% 96%;
+    --foreground: 220 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
+
+    --primary: 27 87% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 50% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 27 87% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 27 87% 55%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Terra Zone Glassmorphism Colors */
+    --glass-bg: 220 30% 15%;
+    --glass-border: 220 30% 30%;
+    --terra-orange: 27 87% 55%;
+    --terra-blue: 210 50% 45%;
+    --terra-success: 142 70% 45%;
+    --terra-warning: 45 100% 50%;
+  }
+
+  .dark {
+    --background: 220 30% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 25% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 25% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 27 98% 62%;    /* Brighter orange for better visibility */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 60% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 25% 18%;
+    --muted-foreground: 215 20.2% 75%;    /* Lighter muted text */
+
+    --accent: 27 98% 62%;    /* Match primary */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 25% 22%;    /* Slightly lighter borders */
+    --input: 220 25% 22%;
+    --ring: 27 98% 62%;
+    
+    --sidebar-background: 220 30% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 27 98% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 25% 15%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 220 25% 22%;
+    --sidebar-ring: 27 98% 62%;
+
+    /* Terra Zone Glassmorphism Colors - Dark - Enhanced visibility */
+    --glass-bg: 220 30% 10%;
+    --glass-border: 220 30% 30%;    /* Lighter borders for visibility */
+    --terra-orange: 27 98% 65%;    /* Brighter */
+    --terra-blue: 210 70% 60%;    /* Brighter */
+    --terra-success: 142 70% 55%;
+    --terra-warning: 45 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* MapLibre GL CSS */
+@import 'maplibre-gl/dist/maplibre-gl.css';
+@import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+
+/* Glassmorphism Utilities - DARK MODE */
+.glass-panel {
+  background: hsl(220 30% 5% / 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+}
+
+.glass-panel-light {
+  background: hsl(0 0% 100% / 0.15);
+  backdrop-filter: blur(16px);
+  border: 1px solid hsl(0 0% 100% / 0.25);
+  box-shadow: 0 8px 32px 0 hsl(0 0% 0% / 0.1);
+}
+
+/* Custom Scrollbar - Dark Theme Optimized */
+.custom-scrollbar {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #2A2A2A #0A0A0A;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0A0A0A;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #2A2A2A;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #3A3A3A;
+}
+
+/* Smooth transitions */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Markdown Prose Styling for AI Reasoning */
+.prose {
+  max-width: none;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: hsl(var(--foreground));
+}
+
+.prose h1 {
+  font-size: 1.5em;
+}
+
+.prose h2 {
+  font-size: 1.25em;
+}
+
+.prose h3 {
+  font-size: 1.1em;
+}
+
+.prose p {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  line-height: 1.7;
+  color: hsl(var(--foreground) / 0.9);
+}
+
+.prose strong {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.prose ul,
+.prose ol {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  color: hsl(var(--foreground) / 0.9);
+}
+
+.prose code {
+  background: hsl(var(--muted));
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+
+.prose blockquote {
+  border-left: 3px solid hsl(var(--primary));
+  padding-left: 1em;
+  margin: 1em 0;
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Panel Resize Handle Styling */
+[data-panel-resize-handle-id] {
+  position: relative;
+  outline: none;
+}
+
+[data-panel-resize-handle-id]:hover::before,
+[data-panel-resize-handle-id]:focus::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 48px;
+  background: hsl(var(--primary) / 0.6);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+[data-panel-resize-handle-id]:active::before {
+  background: hsl(var(--primary));
+  height: 64px;
+}
+
+/* Hide MapLibre Attribution */
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-logo,
+.mapboxgl-ctrl-attrib,
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}
+
+/* Premium Tab Navigation Overrides */
+[role="tablist"] [role="tab"] {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}

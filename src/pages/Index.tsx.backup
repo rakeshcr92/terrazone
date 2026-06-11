@@ -1,0 +1,278 @@
+import { useState } from 'react';
+import type { Feature, Polygon } from 'geojson';
+import * as turf from '@turf/turf';
+import MapView from '@/components/MapView';
+import { DecisionPanel } from '@/components/DecisionPanel';
+import { LegalGhost3D } from '@/components/LegalGhost3D';
+import { SiteComparison } from '@/components/SiteComparison';
+import { ScenarioAnalysis } from '@/components/ScenarioAnalysis';
+import { ReportGenerator } from '@/components/ReportGenerator';
+import { supabase } from '@/integrations/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sparkles, BarChart3, Sliders, FileText } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+
+export default function Index() {
+  const [decisionData, setDecisionData] = useState<Record<string, unknown> | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState('');
+  const [drawnPolygon, setDrawnPolygon] = useState<Feature<Polygon> | null>(null);
+  const [activeTab, setActiveTab] = useState<'decision' | '3d' | 'compare' | 'scenario' | 'report'>('decision');
+  const [polygonArea, setPolygonArea] = useState<{ sqFt: number; acres: string; sqMeters: number } | null>(null);
+  const [analyzedSites, setAnalyzedSites] = useState<Array<Record<string, unknown>>>([]);
+
+  const handlePolygonComplete = async (coordinates: number[][][]) => {
+    // Store the drawn polygon for map rendering
+    const polygon: Feature<Polygon> = {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates
+      },
+      properties: {}
+    };
+    setDrawnPolygon(polygon);
+    
+    setIsAnalyzing(true);
+    setDecisionData(null);
+    setActiveTab('decision');
+    setAnalysisProgress('Initializing AI Decision Engine...');
+
+    try {
+      console.log('🚀 Initiating Terra-Zone AI Decision Engine...');
+      
+      // Calculate area using turf.js (frontend validation)
+      const points = coordinates[0];
+      const closedPoints = points[points.length - 1][0] === points[0][0] && 
+                          points[points.length - 1][1] === points[0][1]
+        ? points
+        : [...points, points[0]];
+      
+      const turfPolygon = turf.polygon([closedPoints]);
+      const areaSqMeters = turf.area(turfPolygon);
+      const sqFt = Math.round(areaSqMeters * 10.7639);
+      const acres = (areaSqMeters * 0.000247105).toFixed(3);
+      
+      console.log('📐 Frontend calculated area:');
+      console.log('  - Square meters:', areaSqMeters);
+      console.log('  - Square feet:', sqFt.toLocaleString());
+      console.log('  - Acres:', acres);
+      
+      // Store area for immediate display
+      setPolygonArea({ sqFt, acres, sqMeters: areaSqMeters });
+      
+      // Validate minimum area
+      if (areaSqMeters < 100) {
+        alert(`Polygon too small: ${sqFt} ft² / ${acres} acres\n\nMinimum required: 1,076 ft² (0.025 acres)\n\nPlease draw a larger area.`);
+        setIsAnalyzing(false);
+        setPolygonArea(null);
+        return;
+      }
+      
+      // Update progress during analysis
+      const progressInterval = setInterval(() => {
+        const messages = [
+          'Phase 1: Geological Analysis...',
+          'Phase 2: Zoning Compliance Check...',
+          'Phase 3: Foundation Cost Estimation...',
+          'Phase 4: ROI Prediction...',
+          'Phase 5: Final AI Verdict...'
+        ];
+        setAnalysisProgress(messages[Math.floor(Math.random() * messages.length)]);
+      }, 3000);
+      
+      // Set a timeout for the analysis (90 seconds)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Analysis timeout - please try again')), 90000)
+      );
+
+      // Call the autonomous decision engine with timeout
+      const analysisPromise = supabase.functions.invoke('decision-engine', {
+        body: { 
+          coordinates,
+          siteName: `Site Analysis ${new Date().toLocaleString()}`,
+          // Pass calculated area for validation/display
+          calculatedArea: {
+            sqMeters: areaSqMeters,
+            sqFt,
+            acres
+          }
+        }
+      });
+
+      const response = await Promise.race([analysisPromise, timeoutPromise]) as { data?: unknown; error?: Error };
+
+      clearInterval(progressInterval);
+
+      if (response.error) {
+        console.error('❌ Decision engine error:', response.error);
+        alert(`Analysis failed: ${response.error.message || 'Unknown error'}`);
+        throw response.error;
+      }
+
+      const result = response.data;
+      console.log('========== ANALYSIS COMPLETE ==========');
+      console.log('✅ Full result object:', result);
+      console.log('📊 Site data:', (result as Record<string, unknown>)?.site);
+      console.log('📊 Site area from backend:', ((result as Record<string, unknown>)?.site as Record<string, unknown>)?.area);
+      console.log('💰 ROI data:', ((result as Record<string, unknown>)?.analysis as Record<string, unknown>)?.roi);
+      console.log('🧠 Decision:', (result as Record<string, unknown>)?.decision);
+      console.log('=======================================');
+
+      setDecisionData(result as Record<string, unknown>);
+      
+      // Add to analyzed sites list for comparison (Phase 1 feature)
+      const siteWithId = {
+        ...(result as Record<string, unknown>),
+        id: Date.now().toString(),
+        name: ((result as Record<string, unknown>).site as Record<string, unknown>)?.name as string || `Site ${analyzedSites.length + 1}`,
+        timestamp: new Date().toISOString()
+      };
+      setAnalyzedSites(prev => [...prev, siteWithId]);
+      
+      console.log(`✅ Site added to comparison. Total sites: ${analyzedSites.length + 1}`);
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setPolygonArea(null); // Clear area on error
+      if (error instanceof Error && error.message.includes('timeout')) {
+        alert('Analysis is taking longer than expected. The backend may be processing multiple AI requests. Please try again.');
+      }
+    } finally {
+      setIsAnalyzing(false);
+      setAnalysisProgress('');
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen flex overflow-hidden bg-background">
+      {/* Main Map Area */}
+      <div className="flex-1 relative">
+        <MapView 
+          onPolygonComplete={handlePolygonComplete}
+          zoningHeight={
+            decisionData?.analysis?.zoning?.zoning?.max_height_meters || 
+            decisionData?.analysis?.zoning?.zoning?.maxBuildingHeightMeters || 
+            null
+          }
+          drawnPolygon={drawnPolygon}
+        />
+        
+        {/* Compact Floating Title - Allows click-through */}
+        <div className="absolute top-4 left-4 z-10 pointer-events-none">
+          <div className="glass-panel px-4 py-2 pointer-events-auto">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                Terra-Zone AI
+              </h1>
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                <Sparkles className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-medium text-primary">AI + Real APIs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Processing Indicator */}
+        {isAnalyzing && (
+          <div className="absolute top-16 left-4 z-10 pointer-events-none">
+            <div className="glass-panel px-3 py-2 flex flex-col gap-1 pointer-events-auto">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '200ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '400ms' }} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-foreground">Analyzing...</span>
+                  <span className="text-[10px] text-muted-foreground">{analysisProgress || 'Starting...'}</span>
+                </div>
+              </div>
+              {polygonArea && (
+                <div className="text-[10px] text-primary/80 font-mono border-t border-white/10 pt-1 mt-1">
+                  📐 {polygonArea.sqFt.toLocaleString()} ft² / {polygonArea.acres} acres
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Right Panel - Decision Results & 3D Visualization */}
+      <div className="w-[480px] h-full border-l border-border/50 bg-black/70 backdrop-blur-xl flex flex-col overflow-hidden">
+        {decisionData || isAnalyzing ? (
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'decision' | '3d')} className="flex-1 flex flex-col min-h-0">
+            <div className="border-b border-white/10 px-6 py-4 bg-black/30">
+              <TabsList className="grid w-full grid-cols-2 bg-black/40">
+                <TabsTrigger value="decision">AI Decision</TabsTrigger>
+                <TabsTrigger value="3d">3D Legal Ghost</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="decision" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 mt-0">
+              <DecisionPanel 
+                decision={decisionData} 
+                isLoading={isAnalyzing} 
+                progressMessage={analysisProgress}
+              />
+            </TabsContent>
+
+            <TabsContent value="3d" className="flex-1 min-h-0 overflow-y-auto p-6 mt-0">
+              {drawnPolygon && decisionData?.analysis?.zoning?.zoning?.max_height_meters ? (
+                <div className="h-full">
+                  <LegalGhost3D
+                    coordinates={drawnPolygon.geometry.coordinates}
+                    maxHeightMeters={decisionData.analysis.zoning.zoning.max_height_meters}
+                    setbacks={decisionData.analysis.zoning.zoning.setbacks}
+                    violation={false}
+                  />
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <p className="text-sm">Complete analysis to view 3D visualization</p>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div className="bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-2xl space-y-4 max-w-sm shadow-2xl">
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+                <Sparkles className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">
+                Holistic Site Selection
+              </h2>
+              <p className="text-sm text-white/70 leading-relaxed">
+                Draw a polygon on the map to initiate comprehensive AI-powered analysis:
+              </p>
+              <div className="text-left space-y-2.5 text-sm text-white/80">
+                <div className="flex items-start gap-3">
+                  <span className="text-primary text-lg">•</span>
+                  <span>Geological subsurface analysis</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-primary text-lg">•</span>
+                  <span>Zoning compliance & RAG retrieval</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-primary text-lg">•</span>
+                  <span>Foundation cost estimation</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-primary text-lg">•</span>
+                  <span>ROI prediction & market intelligence</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-primary text-lg">•</span>
+                  <span className="font-semibold text-white">Final GO/NO-GO decision</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

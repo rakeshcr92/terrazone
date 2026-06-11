@@ -1,0 +1,171 @@
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Sites table: stores land parcels selected by users
+CREATE TABLE sites (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT,
+  coordinates JSONB NOT NULL,
+  area_sqm DECIMAL,
+  location_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Site analyses: comprehensive analysis results
+CREATE TABLE site_analyses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_id UUID REFERENCES sites(id) ON DELETE CASCADE,
+  
+  -- Module outputs
+  geological_data JSONB,
+  zoning_data JSONB,
+  foundation_cost JSONB,
+  roi_prediction JSONB,
+  
+  -- Final decision
+  final_verdict TEXT CHECK (final_verdict IN ('GO', 'NO-GO', 'CONDITIONAL')),
+  confidence_score DECIMAL CHECK (confidence_score >= 0 AND confidence_score <= 100),
+  gemini_reasoning TEXT,
+  alternative_strategies JSONB,
+  
+  -- Metadata
+  processing_time_ms INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RAG Zoning database: municipal zoning codes
+CREATE TABLE zoning_codes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  municipality TEXT NOT NULL,
+  zone_code TEXT NOT NULL,
+  district_name TEXT,
+  
+  -- Constraints
+  max_height_meters DECIMAL,
+  max_floors INTEGER,
+  far DECIMAL, -- Floor Area Ratio
+  lot_coverage_max DECIMAL, -- percentage
+  
+  -- Setbacks
+  setback_front_meters DECIMAL,
+  setback_rear_meters DECIMAL,
+  setback_side_meters DECIMAL,
+  
+  -- Permitted uses
+  permitted_uses TEXT[],
+  conditional_uses TEXT[],
+  prohibited_uses TEXT[],
+  
+  -- Additional requirements
+  parking_ratio TEXT,
+  special_requirements TEXT[],
+  
+  -- RAG support
+  full_text TEXT, -- Complete regulation text
+  document_source TEXT,
+  
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(municipality, zone_code)
+);
+
+-- Market intelligence: real estate market data
+CREATE TABLE market_intelligence (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  municipality TEXT NOT NULL,
+  property_type TEXT NOT NULL, -- residential, commercial, mixed-use, industrial
+  
+  -- Pricing
+  avg_price_per_sqm DECIMAL,
+  price_trend TEXT, -- rising, stable, declining
+  yoy_growth_percent DECIMAL,
+  
+  -- Market conditions
+  vacancy_rate DECIMAL,
+  absorption_rate DECIMAL,
+  avg_days_on_market INTEGER,
+  
+  -- Demographics
+  population_growth_rate DECIMAL,
+  median_income DECIMAL,
+  
+  data_date DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(municipality, property_type, data_date)
+);
+
+-- Construction vendors: for Knot API integration
+CREATE TABLE construction_vendors (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  specialty TEXT, -- foundation, structural, excavation
+  service_type TEXT,
+  
+  -- Pricing
+  cost_multiplier DECIMAL DEFAULT 1.0,
+  base_rate_per_sqm DECIMAL,
+  
+  -- Integration
+  knot_vendor_id TEXT,
+  api_metadata JSONB,
+  
+  -- Performance
+  reliability_score DECIMAL CHECK (reliability_score >= 0 AND reliability_score <= 5),
+  avg_completion_days INTEGER,
+  
+  location TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Foundation cost estimates
+CREATE TABLE foundation_estimates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_analysis_id UUID REFERENCES site_analyses(id) ON DELETE CASCADE,
+  
+  -- Cost breakdown
+  excavation_cost DECIMAL,
+  material_cost DECIMAL,
+  labor_cost DECIMAL,
+  engineering_cost DECIMAL,
+  total_cost DECIMAL,
+  
+  -- Risk factors
+  soil_complexity_multiplier DECIMAL DEFAULT 1.0,
+  groundwater_risk_multiplier DECIMAL DEFAULT 1.0,
+  
+  -- Recommendations
+  foundation_type TEXT, -- shallow, deep, caisson, pile
+  construction_duration_days INTEGER,
+  feasibility_score DECIMAL CHECK (feasibility_score >= 0 AND feasibility_score <= 100),
+  
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE sites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_analyses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zoning_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE market_intelligence ENABLE ROW LEVEL SECURITY;
+ALTER TABLE construction_vendors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE foundation_estimates ENABLE ROW LEVEL SECURITY;
+
+-- Public access policies (for demo purposes)
+CREATE POLICY "Allow public read access on sites" ON sites FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on sites" ON sites FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public read access on site_analyses" ON site_analyses FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on site_analyses" ON site_analyses FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public read access on zoning_codes" ON zoning_codes FOR SELECT USING (true);
+CREATE POLICY "Allow public read access on market_intelligence" ON market_intelligence FOR SELECT USING (true);
+CREATE POLICY "Allow public read access on construction_vendors" ON construction_vendors FOR SELECT USING (true);
+CREATE POLICY "Allow public read access on foundation_estimates" ON foundation_estimates FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on foundation_estimates" ON foundation_estimates FOR INSERT WITH CHECK (true);
+
+-- Indexes for performance
+CREATE INDEX idx_sites_created_at ON sites(created_at DESC);
+CREATE INDEX idx_site_analyses_site_id ON site_analyses(site_id);
+CREATE INDEX idx_zoning_codes_municipality ON zoning_codes(municipality);
+CREATE INDEX idx_zoning_codes_zone_code ON zoning_codes(zone_code);
+CREATE INDEX idx_market_intelligence_lookup ON market_intelligence(municipality, property_type);

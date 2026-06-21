@@ -49,6 +49,7 @@ ${JSON.stringify(context || {}, null, 2)}
           generationConfig: {
             temperature: 0.1,
             maxOutputTokens: 1200,
+            responseMimeType: "application/json"
           },
         }),
       }
@@ -63,7 +64,17 @@ ${JSON.stringify(context || {}, null, 2)}
     const data = await response.json();
 
     const reasoning =
-      data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      data.candidates?.[0]?.content?.parts
+      ?.map((p: any) => p.text)
+      .join("") || "";
+    
+    if (!reasoning) {
+      console.error(
+        "Empty Gemini response:",
+        JSON.stringify(data)
+      );
+      throw new Error("Gemini returned empty response");
+    }
 
     return new Response(
       JSON.stringify({

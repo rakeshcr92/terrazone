@@ -47,8 +47,8 @@ ${JSON.stringify(context || {}, null, 2)}
             },
           ],
           generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 500,
+            temperature: 0.1,
+            maxOutputTokens: 1200,
           },
         }),
       }

@@ -5,9 +5,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import * as turf from 'https://esm.sh/@turf/turf@7.3.4';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
@@ -202,7 +202,17 @@ Return JSON with these EXACT numbers cited in decision, key_strength, primary_ri
     let structuredAnalysis;
     try {
       // Try to parse as JSON if it's a string
-      const rawResponse = geminiResult.reasoning || '';
+      const rawResponse = geminiResult.reasoning;
+      if (!rawResponse) {
+        console.error("EMPTY GEMINI RESPONSE:", geminiResult);
+        structuredAnalysis = buildDataDrivenSummary(
+          decisionContext,
+          roiData,
+          foundationData,
+          geologicalResult,
+          zoningResult
+        );
+      }
       console.log('🔍 Raw AI response:', rawResponse.substring(0, 200));
 
       // Clean markdown if present
@@ -216,7 +226,12 @@ Return JSON with these EXACT numbers cited in decision, key_strength, primary_ri
       structuredAnalysis = JSON.parse(cleaned);
       console.log('✅ Successfully parsed structured JSON');
     } catch (parseError) {
-      console.error('❌ Failed to parse AI JSON:', parseError);
+      console.error(
+        '❌ Failed to parse AI JSON:',
+        parseError,
+        "\nRAW:",
+        rawResponse
+      );
       console.log('📝 Falling back to data-driven summary');
 
       // Fallback: Build summary from actual data

@@ -58,8 +58,12 @@ Deno.serve(async (req) => {
       .select()
       .single();
 
-    if (siteError) throw new Error('Failed to create site record');
-    console.log('📍 Site created:', site.id);
+    if (siteError) {
+      console.error("SITE INSERT ERROR:", siteError);
+      throw new Error(
+        `Failed to create site record: ${siteError.message}`
+      );
+    }
 
     // PHASE 1: Fetch geological data
     const geologicalResponse = await fetch(`${supabaseUrl}/functions/v1/geological-data`, {

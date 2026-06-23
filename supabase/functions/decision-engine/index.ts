@@ -199,44 +199,53 @@ Return JSON with these EXACT numbers cited in decision, key_strength, primary_ri
     console.log('📥 AI Response received:', geminiResult);
 
     // Parse structured JSON response
-    let structuredAnalysis;
-    try {
-      // Try to parse as JSON if it's a string
-      const rawResponse = geminiResult.reasoning;
-      if (!rawResponse) {
-        console.error("EMPTY GEMINI RESPONSE:", geminiResult);
-        structuredAnalysis = buildDataDrivenSummary(
-          decisionContext,
-          roiData,
-          foundationData,
-          geologicalResult,
-          zoningResult
-        );
-      }
-      console.log('🔍 Raw AI response:', rawResponse.substring(0, 200));
+let structuredAnalysis;
 
-      // Clean markdown if present
-      let cleaned = rawResponse.trim();
-      if (cleaned.startsWith('```json')) {
-        cleaned = cleaned.replace(/```json\s*/, '').replace(/```\s*$/, '');
-      } else if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/```\s*/, '').replace(/```\s*$/, '');
-      }
+const rawResponse =
+  typeof geminiResult?.reasoning === "string" ? geminiResult.reasoning : "";
 
-      structuredAnalysis = JSON.parse(cleaned);
-      console.log('✅ Successfully parsed structured JSON');
-    } catch (parseError) {
-      console.error(
-        '❌ Failed to parse AI JSON:',
-        parseError,
-        "\nRAW:",
-        rawResponse
-      );
-      console.log('📝 Falling back to data-driven summary');
+if (!geminiResponse.ok || geminiResult?.error || !rawResponse) {
+  console.error("⚠️ Gemini/AI response unavailable. Falling back to data-driven summary:", {
+    status: geminiResponse.status,
+    statusText: geminiResponse.statusText,
+    geminiResult,
+  });
 
-      // Fallback: Build summary from actual data
-      structuredAnalysis = buildDataDrivenSummary(decisionContext, roiData, foundationData, geologicalResult, zoningResult);
+  structuredAnalysis = buildDataDrivenSummary(
+    decisionContext,
+    roiData,
+    foundationData,
+    geologicalResult,
+    zoningResult
+  );
+} else {
+  try {
+    console.log("🔍 Raw AI response:", rawResponse.substring(0, 200));
+
+    // Clean markdown if present
+    let cleaned = rawResponse.trim();
+
+    if (cleaned.startsWith("```json")) {
+      cleaned = cleaned.replace(/```json\s*/, "").replace(/```\s*$/, "");
+    } else if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/```\s*/, "").replace(/```\s*$/, "");
     }
+
+    structuredAnalysis = JSON.parse(cleaned);
+    console.log("✅ Successfully parsed structured JSON");
+  } catch (parseError) {
+    console.error("❌ Failed to parse AI JSON:", parseError, "\nRAW:", rawResponse);
+    console.log("📝 Falling back to data-driven summary");
+
+    structuredAnalysis = buildDataDrivenSummary(
+      decisionContext,
+      roiData,
+      foundationData,
+      geologicalResult,
+      zoningResult
+    );
+  }
+}
 
     // Validate and sanitize each field
     const validatedAnalysis = validateStructuredAnalysis(structuredAnalysis, decisionContext);

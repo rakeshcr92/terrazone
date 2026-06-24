@@ -9,6 +9,8 @@ import { ReportGenerator } from '@/components/ReportGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
+import { logEvent, createTimer } from "@/lib/analytics";
+
 
 export default function Index() {
   const [decisionData, setDecisionData] = useState<Record<string, unknown> | null>(null);
@@ -20,6 +22,7 @@ export default function Index() {
   const [analyzedSites, setAnalyzedSites] = useState<Array<Record<string, unknown>>>([]);
 
   const handlePolygonComplete = async (coordinates: number[][][]) => {
+    const reportTimer = createTimer();
     // Store the drawn polygon for map rendering
     const polygon: Feature<Polygon> = {
       type: 'Feature',
@@ -30,11 +33,26 @@ export default function Index() {
       properties: {}
     };
     setDrawnPolygon(polygon);
+
+    await logEvent({
+  eventName: "parcel_selected",
+  properties: {
+    coordinates_count: coordinates?.[0]?.length ?? 0,
+    polygon_type: "drawn_polygon",
+  },
+});
     
     setIsAnalyzing(true);
     setDecisionData(null);
     setActiveTab('decision');
     setAnalysisProgress('Initializing AI Decision Engine...');
+    await logEvent({
+  eventName: "report_started",
+  properties: {
+    coordinates_count: coordinates?.[0]?.length ?? 0,
+    active_tab: "decision",
+  },
+});
 
     try {
       console.log('🚀 Initiating Terra Zone Decision Engine...');
@@ -126,6 +144,17 @@ export default function Index() {
       console.log('=======================================');
 
       setDecisionData(result as Record<string, unknown>);
+      await logEvent({
+  eventName: "report_completed",
+  properties: {
+    time_to_result_ms: reportTimer.stop(),
+    verdict:
+      typeof result === "object" && result !== null && "verdict" in result
+        ? (result as Record<string, unknown>).verdict
+        : null,
+    coordinates_count: coordinates?.[0]?.length ?? 0,
+  },
+});
       
       // ADD TO COMPARISON LIST (Phase 1 Feature #1)
       const siteWithId = {

@@ -20,6 +20,10 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState<'decision' | 'compare' | 'scenario' | 'report'>('decision');
   const [polygonArea, setPolygonArea] = useState<{ sqFt: number; acres: string; sqMeters: number } | null>(null);
   const [analyzedSites, setAnalyzedSites] = useState<Array<Record<string, unknown>>>([]);
+  const [feedbackUsefulness, setFeedbackUsefulness] = useState<number | null>(null);
+  const [feedbackTrust, setFeedbackTrust] = useState<number | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   const handlePolygonComplete = async (coordinates: number[][][]) => {
     const reportTimer = createTimer();
@@ -178,6 +182,28 @@ export default function Index() {
     }
   };
 
+  const handleSubmitFeedback = async () => {
+  if (!decisionData || !feedbackUsefulness || !feedbackTrust) {
+    return;
+  }
+
+  await logEvent({
+    eventName: "feedback_submitted",
+    properties: {
+      usefulness_rating: feedbackUsefulness,
+      trust_rating: feedbackTrust,
+      comment: feedbackComment.trim() || null,
+      verdict:
+        typeof decisionData.verdict === "string"
+          ? decisionData.verdict
+          : null,
+      active_tab: activeTab,
+    },
+  });
+
+  setFeedbackSubmitted(true);
+};
+
   return (
     <PanelGroup direction="horizontal" className="h-screen w-screen bg-background">
       {/* Main Map Area - Resizable */}
@@ -274,12 +300,99 @@ export default function Index() {
           <TabsContent value="decision" className="flex-1 mt-0 p-0 overflow-y-auto overflow-x-hidden custom-scrollbar" style={{ backgroundColor: '#0A0A0A' }}>
             <div className="p-6" style={{ backgroundColor: '#0A0A0A' }}>
               {decisionData || isAnalyzing ? (
-                <DecisionPanel 
-                  decision={decisionData} 
-                  isLoading={isAnalyzing} 
-                  progressMessage={analysisProgress}
-                />
-              ) : (
+  <div className="space-y-6">
+    <DecisionPanel 
+      decision={decisionData} 
+      isLoading={isAnalyzing} 
+      progressMessage={analysisProgress}
+    />
+
+    {decisionData && !isAnalyzing && (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-white">Help us improve this report</h3>
+          <p className="text-sm text-white/60">
+            This quick feedback helps us understand whether the report is useful for pilot users.
+          </p>
+        </div>
+
+        {feedbackSubmitted ? (
+          <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-300">
+            Thanks — your feedback was submitted.
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <div>
+              <p className="mb-2 text-sm font-medium text-white">
+                How useful was this report?
+              </p>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={`usefulness-${rating}`}
+                    type="button"
+                    onClick={() => setFeedbackUsefulness(rating)}
+                    className={`h-9 w-9 rounded-full border text-sm font-semibold transition ${
+                      feedbackUsefulness === rating
+                        ? "border-orange-400 bg-orange-500 text-white"
+                        : "border-white/15 bg-white/[0.04] text-white/70 hover:border-orange-400/70"
+                    }`}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-sm font-medium text-white">
+                How much do you trust the verdict?
+              </p>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={`trust-${rating}`}
+                    type="button"
+                    onClick={() => setFeedbackTrust(rating)}
+                    className={`h-9 w-9 rounded-full border text-sm font-semibold transition ${
+                      feedbackTrust === rating
+                        ? "border-orange-400 bg-orange-500 text-white"
+                        : "border-white/15 bg-white/[0.04] text-white/70 hover:border-orange-400/70"
+                    }`}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-white">
+                What was missing or confusing? Optional
+              </label>
+              <textarea
+                value={feedbackComment}
+                onChange={(event) => setFeedbackComment(event.target.value)}
+                rows={3}
+                placeholder="Example: I wanted clearer zoning source links..."
+                className="w-full resize-none rounded-xl border border-white/10 bg-black/40 p-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-orange-400/70"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSubmitFeedback}
+              disabled={!feedbackUsefulness || !feedbackTrust}
+              className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Submit Feedback
+            </button>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8 max-w-sm">
                     <h2 className="text-xl font-bold text-white mb-2">Draw to Analyze</h2>

@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { logEvent, createTimer } from "@/lib/analytics";
 
-
 export default function Index() {
   const [decisionData, setDecisionData] = useState<Record<string, unknown> | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -179,6 +178,15 @@ export default function Index() {
   };
 
   return (
+  <>
+    <button
+      type="button"
+      onClick={() => void supabase.auth.signOut()}
+      className="fixed right-4 top-4 z-[9999] rounded-lg border border-white/10 bg-black/70 px-4 py-2 text-sm text-white shadow-lg backdrop-blur hover:bg-white/10"
+    >
+      Logout
+    </button>
+
     <PanelGroup direction="horizontal" className="h-screen w-screen bg-background">
       {/* Main Map Area - Resizable */}
       <Panel defaultSize={65} minSize={30} className="relative">
@@ -337,5 +345,6 @@ export default function Index() {
         </Tabs>
       </Panel>
     </PanelGroup>
-  );
+  </>
+);
 }

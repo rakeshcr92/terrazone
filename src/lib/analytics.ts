@@ -10,6 +10,21 @@ type LogEventInput = {
   properties?: AnalyticsProperties;
 };
 
+type AnalyticsEventInsert = {
+  event_name: string;
+  user_id: string | null;
+  parcel_id: string | null;
+  report_id: string | null;
+  properties: AnalyticsProperties;
+  created_at: string;
+};
+
+type AnalyticsClient = {
+  from: (table: "analytics_events") => {
+    insert: (payload: AnalyticsEventInsert) => Promise<{ error: unknown }>;
+  };
+};
+
 export async function logEvent({
   eventName,
   userId = null,
@@ -18,8 +33,9 @@ export async function logEvent({
   properties = {},
 }: LogEventInput) {
   try {
-    // TODO: Remove `as any` after Supabase types are regenerated with analytics_events.
-    const { error } = await (supabase as any).from("analytics_events").insert({
+    const analyticsClient = supabase as unknown as AnalyticsClient;
+
+    const { error } = await analyticsClient.from("analytics_events").insert({
       event_name: eventName,
       user_id: userId,
       parcel_id: parcelId,

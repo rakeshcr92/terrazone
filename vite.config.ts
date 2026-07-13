@@ -1,15 +1,15 @@
 import { defineConfig, PluginOption } from "vite";
-import { enterDevPlugin, enterProdPlugin } from 'vite-plugin-enter-dev';
+import { enterDevPlugin, enterProdPlugin } from "vite-plugin-enter-dev";
 import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const plugins = [
-    ...enterProdPlugin(),
-  ];
-  if (mode === 'development') {
+  const plugins = [...enterProdPlugin()];
+
+  if (mode === "development") {
     plugins.push(...enterDevPlugin());
   }
+
   return {
     server: {
       host: "::",
@@ -21,9 +21,14 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    base: '/',
+    base: "/",
     build: {
-      outDir: 'dist',
-    }
+      outDir: "dist",
+    },
+    test: {
+      environment: "jsdom",
+      setupFiles: "./src/test/setup.ts",
+      globals: true,
+    },
   };
 });

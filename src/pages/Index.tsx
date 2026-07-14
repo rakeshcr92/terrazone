@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { logEvent, createTimer } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
+import { PilotFeedback } from "@/components/PilotFeedback";
 
 export default function Index() {
   const [decisionData, setDecisionData] = useState<Record<string, unknown> | null>(null);
@@ -259,12 +260,32 @@ export default function Index() {
           <TabsContent value="decision" className="flex-1 mt-0 p-0 overflow-y-auto overflow-x-hidden custom-scrollbar" style={{ backgroundColor: '#0A0A0A' }}>
             <div className="p-6" style={{ backgroundColor: '#0A0A0A' }}>
               {decisionData || isAnalyzing ? (
-                <DecisionPanel 
-                  decision={decisionData} 
-                  isLoading={isAnalyzing} 
-                  progressMessage={analysisProgress}
-                />
-              ) : (
+  <div className="space-y-6">
+    <DecisionPanel 
+      decision={decisionData} 
+      isLoading={isAnalyzing} 
+      progressMessage={analysisProgress}
+    />
+
+    {decisionData && !isAnalyzing && (
+      <PilotFeedback
+        verdict={(decisionData.verdict as string) ?? null}
+        confidenceScore={
+          ((decisionData as { confidenceScore?: number }).confidenceScore ??
+            (decisionData as { confidence_score?: number }).confidence_score ??
+            null)
+        }
+        siteArea={
+          (((decisionData.site as Record<string, unknown> | undefined)?.areaSqft as number | undefined) ??
+            ((decisionData.site as Record<string, unknown> | undefined)?.area_sqft as number | undefined) ??
+            ((decisionData.site as Record<string, unknown> | undefined)?.area as number | undefined) ??
+            null)
+        }
+        activeTab={activeTab}
+      />
+    )}
+  </div>
+) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-8 max-w-sm">
                     <h2 className="text-xl font-bold text-white mb-2">Draw to Analyze</h2>

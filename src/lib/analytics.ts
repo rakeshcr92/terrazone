@@ -27,20 +27,33 @@ type AnalyticsClient = {
 
 export async function logEvent({
   eventName,
-  userId = null,
+  userId,
   parcelId = null,
   reportId = null,
   properties = {},
 }: LogEventInput) {
   try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const authUser = session?.user ?? null;
+    const resolvedUserId = userId ?? authUser?.id ?? null;
+
+    const enrichedProperties: AnalyticsProperties = {
+      ...properties,
+      auth_user_email: authUser?.email ?? null,
+      auth_user_id: authUser?.id ?? null,
+    };
+
     const analyticsClient = supabase as unknown as AnalyticsClient;
 
     const { error } = await analyticsClient.from("analytics_events").insert({
       event_name: eventName,
-      user_id: userId,
+      user_id: resolvedUserId,
       parcel_id: parcelId,
       report_id: reportId,
-      properties,
+      properties: enrichedProperties,
       created_at: new Date().toISOString(),
     });
 

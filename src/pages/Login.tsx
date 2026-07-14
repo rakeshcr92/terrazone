@@ -6,8 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Login() {
   const [session, setSession] = useState<Session | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [fullName, setFullName] = useState("");
+  const [company, setCompany] = useState("");
+  const [role, setRole] = useState("");
+
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +48,17 @@ export default function Login() {
     const authAction =
       mode === "login"
         ? supabase.auth.signInWithPassword({ email, password })
-        : supabase.auth.signUp({ email, password });
+        : supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName.trim() || null,
+                company: company.trim() || null,
+                role: role.trim() || null,
+              },
+            },
+          });
 
     const { error } = await authAction;
 
@@ -57,6 +73,7 @@ export default function Login() {
         ? "Logged in successfully."
         : "Account created. Check your email if confirmation is enabled.",
     );
+
     setIsSubmitting(false);
   }
 
@@ -195,6 +212,48 @@ export default function Login() {
                   placeholder="••••••••"
                 />
               </label>
+
+              {mode === "signup" && (
+                <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <label className="block">
+                    <span className="mb-2 block text-sm text-white/65">
+                      Full name
+                    </span>
+                    <input
+                      className="w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-black outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
+                      type="text"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                      autoComplete="name"
+                      placeholder="Your name"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-sm text-white/65">
+                      Company
+                    </span>
+                    <input
+                      className="w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-black outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
+                      type="text"
+                      value={company}
+                      onChange={(event) => setCompany(event.target.value)}
+                      placeholder="Company name"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-sm text-white/65">Role</span>
+                    <input
+                      className="w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-black outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20"
+                      type="text"
+                      value={role}
+                      onChange={(event) => setRole(event.target.value)}
+                      placeholder="Developer, broker, consultant..."
+                    />
+                  </label>
+                </div>
+              )}
 
               {message && (
                 <p className="rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-white/70">

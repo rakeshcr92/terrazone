@@ -6,10 +6,11 @@ import { DecisionPanel } from '@/components/DecisionPanel';
 import { SiteComparison } from '@/components/SiteComparison';
 import { ScenarioAnalysis } from '@/components/ScenarioAnalysis';
 import { ReportGenerator } from '@/components/ReportGenerator';
-import { supabase } from '@/integrations/supabase/client';
+import { AccountMenu } from "@/components/AccountMenu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { logEvent, createTimer } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Index() {
   const [decisionData, setDecisionData] = useState<Record<string, unknown> | null>(null);
@@ -179,13 +180,8 @@ export default function Index() {
 
   return (
   <>
-    <button
-      type="button"
-      onClick={() => void supabase.auth.signOut()}
-      className="fixed right-4 top-4 z-[9999] rounded-lg border border-white/10 bg-black/70 px-4 py-2 text-sm text-white shadow-lg backdrop-blur hover:bg-white/10"
-    >
-      Logout
-    </button>
+       
+
 
     <PanelGroup direction="horizontal" className="h-screen w-screen bg-background">
       {/* Main Map Area - Resizable */}
@@ -248,35 +244,16 @@ export default function Index() {
       <Panel defaultSize={35} minSize={20} maxSize={60} className="h-screen flex flex-col bg-black border-l border-border/30" style={{ backgroundColor: '#0A0A0A' }}>
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="h-full flex flex-col">
           {/* Premium Minimal Tab Navigation */}
-          <TabsList className="w-full rounded-none border-none bg-transparent backdrop-blur-sm grid grid-cols-4 flex-shrink-0 p-0 h-14" style={{ backgroundColor: 'rgba(10, 10, 10, 0.95)' }}>
-            <TabsTrigger 
-              value="decision" 
-              className="text-sm font-semibold text-white/60 data-[state=active]:text-white data-[state=active]:bg-white/5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary transition-all hover:text-white/90 hover:bg-white/[0.03]"
-            >
-              Decision
-            </TabsTrigger>
-            <TabsTrigger 
-              value="compare" 
-              disabled={analyzedSites.length === 0}
-              className="text-sm font-semibold text-white/60 data-[state=active]:text-white data-[state=active]:bg-white/5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary transition-all hover:text-white/90 hover:bg-white/[0.03] disabled:opacity-30 disabled:hover:bg-transparent"
-            >
-              Compare{analyzedSites.length > 0 && ` (${analyzedSites.length})`}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="scenario" 
-              disabled={!decisionData}
-              className="text-sm font-semibold text-white/60 data-[state=active]:text-white data-[state=active]:bg-white/5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary transition-all hover:text-white/90 hover:bg-white/[0.03] disabled:opacity-30 disabled:hover:bg-transparent"
-            >
-              Scenarios
-            </TabsTrigger>
-            <TabsTrigger 
-              value="report" 
-              disabled={!decisionData}
-              className="text-sm font-semibold text-white/60 data-[state=active]:text-white data-[state=active]:bg-white/5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary transition-all hover:text-white/90 hover:bg-white/[0.03] disabled:opacity-30 disabled:hover:bg-transparent"
-            >
-              PDF
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between border-b border-white/10 bg-black/80 px-4 py-2">
+  <TabsList className="bg-transparent">
+    <TabsTrigger value="decision">Decision</TabsTrigger>
+    <TabsTrigger value="compare">Compare</TabsTrigger>
+    <TabsTrigger value="scenario">Scenarios</TabsTrigger>
+    <TabsTrigger value="report">PDF</TabsTrigger>
+  </TabsList>
+
+  <AccountMenu />
+</div>
 
           {/* Decision Panel - SCROLLABLE CONTENT AREA */}
           <TabsContent value="decision" className="flex-1 mt-0 p-0 overflow-y-auto overflow-x-hidden custom-scrollbar" style={{ backgroundColor: '#0A0A0A' }}>

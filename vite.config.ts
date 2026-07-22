@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    base: "/",
+    base: "/terrazone/",
     build: {
       outDir: "dist",
     },

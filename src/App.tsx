@@ -8,7 +8,10 @@ import { routers } from "./router";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const router = createBrowserRouter(routers);
+  const router = createBrowserRouter(routers, {
+    basename: import.meta.env.BASE_URL,
+  });
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -17,7 +20,7 @@ const App = () => {
         <RouterProvider router={router} />
       </TooltipProvider>
     </QueryClientProvider>
-  )
+  );
 };
 
 export default App;

@@ -7,7 +7,7 @@
 import { Check, Calendar, MapPin, TrendingUp, Shield, Clock, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SITE } from "@/config/site";
-import { usePageMeta } from "@/lib/page-meta";
+import { usePageMeta, useScrollToTop } from "@/lib/page-meta";
 import "@/styles/geozane.css";
 
 const C = {
@@ -105,6 +105,7 @@ export default function Pilot() {
     "Pilot Program: Geozane",
     "Join the Geozane pilot program. Get full platform access for 30 to 40 days, run unlimited parcel analyses, and work directly with the founding team.",
   );
+  useScrollToTop();
 
   return (
     <div className="gz-page" style={{ background: C.bg, color: C.text, minHeight: "100vh" }}>

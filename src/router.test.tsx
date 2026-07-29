@@ -12,13 +12,17 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
  */
 
 const getSession = vi.fn();
+const getUser = vi.fn();
 const onAuthStateChange = vi.fn();
+const signOut = vi.fn();
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: {
       getSession: () => getSession(),
+      getUser: () => getUser(),
       onAuthStateChange: (cb: unknown) => onAuthStateChange(cb),
+      signOut: () => signOut(),
     },
   },
 }));
@@ -202,9 +206,76 @@ describe("Login", () => {
       expect(screen.getByPlaceholderText("you@company.com")).toBeTruthy();
     });
   });
+
+  it("is not a dead end - offers a way back to the public site", async () => {
+    signedOut();
+
+    const { default: Login } = await import("./pages/Login");
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen
+          .getByRole("link", { name: /Back to Geozane/ })
+          .getAttribute("href"),
+      ).toBe("/");
+    });
+  });
+});
+
+describe("product shell", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("gives the account menu a route back to the landing page", async () => {
+    getUser.mockResolvedValue({
+      data: { user: { email: "pilot@example.com" } },
+    });
+    onAuthStateChange.mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    });
+
+    const { AccountMenu } = await import("./components/AccountMenu");
+    const user = (await import("@testing-library/user-event")).default;
+
+    render(
+      <MemoryRouter initialEntries={["/app"]}>
+        <AccountMenu />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByLabelText("Open account menu"));
+
+    expect(
+      screen
+        .getByRole("link", { name: /Back to Geozane home/ })
+        .getAttribute("href"),
+    ).toBe("/");
+  });
 });
 
 describe("public marketing pages", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    signedOut();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("render their nav links to /login and the other public routes", async () => {
     const { default: Team } = await import("./pages/Team");
 
@@ -223,7 +294,7 @@ describe("public marketing pages", () => {
     ).toBe("/book");
   });
 
-  it("points the landing nav Login and hero Try Geozane buttons at /login", async () => {
+  it("points a signed-out visitor's landing CTAs at /login", async () => {
     const { default: Landing } = await import("./pages/Landing");
 
     render(
@@ -233,15 +304,50 @@ describe("public marketing pages", () => {
     );
 
     expect(screen.getByText(/Know what the land/)).toBeTruthy();
-    expect(
-      screen.getByRole("link", { name: "Login" }).getAttribute("href"),
-    ).toBe("/login");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("link", { name: "Login" }).getAttribute("href"),
+      ).toBe("/login");
+    });
+
     expect(
       screen.getByRole("link", { name: "Try Geozane" }).getAttribute("href"),
     ).toBe("/login");
     expect(
       screen.getAllByRole("link", { name: "Team" })[0].getAttribute("href"),
     ).toBe("/team");
+  });
+
+  it("points an already-signed-in visitor's landing CTAs at /app", async () => {
+    getSession.mockResolvedValue({
+      data: { session: { user: { id: "user-1" } } },
+    });
+    onAuthStateChange.mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    });
+
+    const { default: Landing } = await import("./pages/Landing");
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Landing />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("link", { name: "Open App" }).getAttribute("href"),
+      ).toBe("/app");
+    });
+
+    expect(
+      screen.getByRole("link", { name: /Open Geozane/ }).getAttribute("href"),
+    ).toBe("/app");
+
+    // The signed-out wording must be gone, not just duplicated.
+    expect(screen.queryByRole("link", { name: "Login" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Try Geozane" })).toBeNull();
   });
 
   it("links the Book page back to the pilot programme", async () => {

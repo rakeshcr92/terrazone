@@ -8,6 +8,17 @@ import { useEffect } from "react";
  * previous values on unmount, so navigating from a public marketing page back
  * into the product does not leave a stale title behind.
  */
+/**
+ * The public marketing pages are long-scrolling. Without this, navigating
+ * (say) from the bottom of /pilot to /book lands you mid-page, because the
+ * SPA keeps the previous scroll offset.
+ */
+export function useScrollToTop() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, []);
+}
+
 export function usePageMeta(title: string, description?: string) {
   useEffect(() => {
     const previousTitle = document.title;

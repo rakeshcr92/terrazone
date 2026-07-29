@@ -8,7 +8,7 @@
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { usePageMeta } from "@/lib/page-meta";
+import { usePageMeta, useScrollToTop } from "@/lib/page-meta";
 import "@/styles/geozane.css";
 
 const C = {
@@ -139,6 +139,7 @@ function Nav() {
 
 export default function Team() {
   usePageMeta("Team Geozane", "Meet the team behind Geozane.");
+  useScrollToTop();
 
   return (
     <div className="gz-page" style={{ background: C.bg, color: C.text, minHeight: "100vh" }}>

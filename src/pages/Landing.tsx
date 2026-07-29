@@ -36,7 +36,8 @@ import {
   LeadValidationError,
   type LeadInput,
 } from "@/lib/lead-submit";
-import { usePageMeta } from "@/lib/page-meta";
+import { usePageMeta, useScrollToTop } from "@/lib/page-meta";
+import { useSession } from "@/hooks/use-session";
 import "@/styles/geozane.css";
 
 /* ---------------- Config ---------------- */
@@ -75,6 +76,7 @@ export default function Landing() {
     "Geozane: Land feasibility intelligence in 60 seconds",
     "Click a parcel. Get a GO, NO-GO, or CONDITIONAL verdict in under 60 seconds, powered by USGS, USDA, elevation, and live zoning data.",
   );
+  useScrollToTop();
 
   return (
     <div className="gz-page" style={{ background: C.bg, color: C.text, minHeight: "100vh" }}>
@@ -97,6 +99,46 @@ export default function Landing() {
 const Divider = () => (
   <div style={{ height: 1, background: "rgba(255,255,255,0.04)" }} />
 );
+
+/**
+ * Primary call-to-action that follows the visitor's auth state:
+ *   signed out -> /login
+ *   signed in  -> /app (the protected product)
+ *
+ * Sending an already-authenticated user to /login was confusing: Login
+ * immediately bounces them to /app, so the button looked like it did nothing.
+ *
+ * The session resolves asynchronously, so the label would visibly flip on
+ * first paint. To avoid that the button reserves its width and fades in once
+ * the session is known.
+ */
+function AuthCta({
+  style,
+  signedOutLabel,
+  signedInLabel,
+}: {
+  style: React.CSSProperties;
+  signedOutLabel: string;
+  signedInLabel: string;
+}) {
+  const { session, isLoading } = useSession();
+
+  return (
+    <Link
+      to={session ? "/app" : "/login"}
+      aria-hidden={isLoading}
+      tabIndex={isLoading ? -1 : undefined}
+      style={{
+        ...style,
+        display: "inline-block",
+        opacity: isLoading ? 0 : 1,
+        transition: "opacity 0.25s ease-out",
+      }}
+    >
+      {session ? signedInLabel : signedOutLabel}
+    </Link>
+  );
+}
 
 /* ---------------- Nav ---------------- */
 function Nav() {
@@ -171,8 +213,7 @@ function Nav() {
           >
             Pilot Program
           </Link>
-          <Link
-            to="/login"
+          <AuthCta
             style={{
               fontSize: 13,
               fontWeight: 700,
@@ -181,10 +222,12 @@ function Nav() {
               padding: "6px 16px",
               borderRadius: 6,
               textDecoration: "none",
+              minWidth: 74,
+              textAlign: "center",
             }}
-          >
-            Login
-          </Link>
+            signedOutLabel="Login"
+            signedInLabel="Open App"
+          />
         </div>
         <span aria-hidden style={{ width: 1 }} />
       </div>
@@ -250,16 +293,16 @@ function Hero() {
       </p>
 
       <div style={{ marginTop: 40, display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center" }} className="gz-fade-up">
-        <Link
-          to="/login"
+        <AuthCta
           style={{
             background: C.brand, color: C.bg, fontWeight: 700, fontSize: 16,
             padding: "14px 32px", borderRadius: 8, textDecoration: "none",
             boxShadow: "0 12px 40px -10px rgba(240,130,40,0.55)",
+            minWidth: 186, textAlign: "center",
           }}
-        >
-          Try Geozane
-        </Link>
+          signedOutLabel="Try Geozane"
+          signedInLabel="Open Geozane →"
+        />
         <a
           href={LINKS.youtube}
           target="_blank"

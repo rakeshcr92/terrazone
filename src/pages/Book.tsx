@@ -7,7 +7,7 @@
 import { Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SITE } from "@/config/site";
-import { usePageMeta } from "@/lib/page-meta";
+import { usePageMeta, useScrollToTop } from "@/lib/page-meta";
 import "@/styles/geozane.css";
 
 const C = {
@@ -86,6 +86,7 @@ export default function Book() {
     "Book a Call: Geozane",
     "Schedule a 30-minute Geozane walkthrough. We'll run the platform live on a parcel of your choosing.",
   );
+  useScrollToTop();
 
   return (
     <div className="gz-page" style={{ background: C.bg, color: C.text, minHeight: "100vh" }}>

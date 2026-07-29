@@ -3,6 +3,7 @@ import Map, { MapRef, Source, Layer } from 'react-map-gl/maplibre';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import type { Feature, Polygon } from 'geojson';
 import { Pencil, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { LocationSearch } from './LocationSearch';
 import * as turf from '@turf/turf';
@@ -504,17 +505,22 @@ const MapView = ({
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-auto w-[calc(100%-3rem)] max-w-7xl">
         <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(255,140,66,0.15)] px-8 py-4">
           <div className="flex items-center gap-6">
-            {/* Left: Brand with Logo */}
-            <div className="flex-shrink-0 flex items-center gap-3">
-              <img 
-                src="https://grazia-prod.oss-ap-southeast-1.aliyuncs.com/resources/uid_100036138/55bf.png" 
-                alt="Terra Zone Logo" 
+            {/* Left: Brand with Logo — doubles as the way back to the public
+                Geozane site, which is the conventional place to look for it. */}
+            <Link
+              to="/"
+              title="Back to Geozane home"
+              className="flex-shrink-0 flex items-center gap-3 rounded-xl transition-opacity hover:opacity-80"
+            >
+              <img
+                src="https://grazia-prod.oss-ap-southeast-1.aliyuncs.com/resources/uid_100036138/55bf.png"
+                alt="Terra Zone Logo"
                 className="h-12 w-12 object-contain"
               />
               <h1 className="text-2xl font-bold text-white tracking-wide whitespace-nowrap">
                 Terra <span className="text-primary">Zone</span>
               </h1>
-            </div>
+            </Link>
 
             {/* Center: Actions */}
             <div className="flex items-center gap-4">

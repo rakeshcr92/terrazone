@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import Map, { MapRef, Source, Layer } from 'react-map-gl/maplibre';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import type { Feature, Polygon } from 'geojson';
-import { Pencil, Trash2 } from 'lucide-react';
+/* `Map` is already the react-map-gl component in this file, so the lucide
+   icon is aliased. */
+import { Pencil, Trash2, Map as MapIcon, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { LocationSearch } from './LocationSearch';
@@ -51,6 +53,9 @@ const MapView = ({
   const drawRef = useRef<MapboxDraw | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
+  /* The toolbar overlays the map, so it can be collapsed out of the way down
+     to a single icon button. */
+  const [isToolbarOpen, setIsToolbarOpen] = useState(true);
   const [is3DMode, setIs3DMode] = useState(false);
 
   // Suppress MapLibre errors on mount
@@ -502,67 +507,88 @@ const MapView = ({
   return (
     <div className="w-full h-full relative">
       {/* Premium Unified Top Navigation Bar */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-auto w-[calc(100%-3rem)] max-w-7xl">
-        <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(255,140,66,0.15)] px-5 py-4 xl:px-8">
-          {/*
-            The right analysis panel is resizable (20%-60%), so this toolbar has
-            to survive a fairly narrow map pane. It wraps rather than overflowing:
-            the search claims a min width and drops onto its own full-width row
-            when brand + actions have taken the space.
-          */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 xl:gap-x-6">
-            {/* Left: Brand with Logo — doubles as the way back to the public
-                Geozane site, which is the conventional place to look for it. */}
-            <Link
-              to="/"
-              title="Back to Geozane home"
-              className="flex min-w-0 flex-shrink-0 items-center gap-3 rounded-xl transition-opacity hover:opacity-80"
-            >
-              <img
-                src="https://grazia-prod.oss-ap-southeast-1.aliyuncs.com/resources/uid_100036138/55bf.png"
-                alt="Terra Zone Logo"
-                className="h-10 w-10 flex-shrink-0 object-contain xl:h-12 xl:w-12"
-              />
-              <h1 className="hidden whitespace-nowrap text-xl font-bold tracking-wide text-white sm:block xl:text-2xl">
-                Terra <span className="text-primary">Zone</span>
-              </h1>
-            </Link>
-
-            {/* Center: Actions */}
-            <div className="flex flex-shrink-0 items-center gap-3">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-auto w-[calc(100%-2rem)] max-w-6xl">
+        {isToolbarOpen ? (
+          <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(255,140,66,0.15)] px-3 py-2.5">
+            {/*
+              Single row at every width. The analysis panel is resizable
+              (20%-60%), so the map pane gets narrow: nothing here may force a
+              wrap. Fixed items shrink by dropping their labels at breakpoints
+              and the search absorbs whatever is left via min-w-0.
+            */}
+            <div className="flex flex-nowrap items-center gap-2">
               <Button
-                onClick={handleStartDrawing}
-                className="h-11 rounded-full bg-gradient-to-r from-primary to-primary/90 px-5 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:from-primary/90 hover:to-primary/80 xl:h-12 xl:px-8 xl:text-base"
+                onClick={() => setIsToolbarOpen(false)}
+                variant="ghost"
+                size="icon"
+                title="Hide toolbar"
+                aria-label="Hide toolbar"
+                className="h-9 w-9 flex-shrink-0 rounded-full text-white/60 hover:bg-white/10 hover:text-white"
               >
-                <Pencil className="mr-2 h-5 w-5 flex-shrink-0" />
-                Draw Polygon
+                <X className="h-4 w-4" />
               </Button>
 
-              <Button
-                onClick={handleDeleteAll}
-                variant="outline"
-                className="h-11 rounded-full border-white/20 bg-white/5 px-4 text-sm font-medium text-white transition-all hover:bg-white/10 xl:h-12 xl:px-6 xl:text-base"
+              {/* Brand doubles as the way back to the public Geozane site. */}
+              <Link
+                to="/"
+                title="Back to Geozane home"
+                className="flex flex-shrink-0 items-center gap-2 rounded-xl transition-opacity hover:opacity-80"
               >
-                <Trash2 className="mr-2 h-5 w-5 flex-shrink-0" />
-                Clear
-              </Button>
+                <img
+                  src="https://grazia-prod.oss-ap-southeast-1.aliyuncs.com/resources/uid_100036138/55bf.png"
+                  alt="Terra Zone Logo"
+                  className="h-8 w-8 flex-shrink-0 object-contain"
+                />
+                <h1 className="hidden whitespace-nowrap text-base font-bold tracking-wide text-white xl:block">
+                  Terra <span className="text-primary">Zone</span>
+                </h1>
+              </Link>
+
+              <div className="flex flex-shrink-0 items-center gap-2">
+                <Button
+                  onClick={handleStartDrawing}
+                  className="h-9 rounded-full bg-gradient-to-r from-primary to-primary/90 px-3 text-sm font-semibold text-white shadow-md shadow-primary/25 transition-all hover:from-primary/90 hover:to-primary/80 lg:px-4"
+                >
+                  <Pencil className="h-4 w-4 flex-shrink-0 lg:mr-2" />
+                  <span className="hidden whitespace-nowrap lg:inline">Draw Polygon</span>
+                </Button>
+
+                <Button
+                  onClick={handleDeleteAll}
+                  variant="outline"
+                  title="Clear"
+                  className="h-9 rounded-full border-white/20 bg-white/5 px-3 text-sm font-medium text-white transition-all hover:bg-white/10 lg:px-4"
+                >
+                  <Trash2 className="h-4 w-4 flex-shrink-0 lg:mr-2" />
+                  <span className="hidden lg:inline">Clear</span>
+                </Button>
+              </div>
+
+              {/* Absorbs all remaining width; min-w-0 lets it shrink instead of
+                  pushing the row wider than the container. */}
+              <div className="ml-auto min-w-0 max-w-sm flex-1">
+                <LocationSearch onLocationSelect={handleLocationSelect} />
+              </div>
             </div>
 
-            {/* Right: Search — shrinks to a floor, then wraps to its own row */}
-            <div className="ml-auto min-w-[220px] max-w-md flex-1 basis-[220px]">
-              <LocationSearch onLocationSelect={handleLocationSelect} />
-            </div>
+            {isDrawing && (
+              <div className="mt-2 border-t border-white/10 pt-2 text-center">
+                <span className="animate-pulse text-xs text-white/70">
+                  Click to draw, double-click to finish
+                </span>
+              </div>
+            )}
           </div>
-          
-          {/* Drawing hint below */}
-          {isDrawing && (
-            <div className="text-center mt-3 pt-3 border-t border-white/10">
-              <span className="text-white/70 text-sm animate-pulse">
-                Click to draw, double-click to finish
-              </span>
-            </div>
-          )}
-        </div>
+        ) : (
+          <Button
+            onClick={() => setIsToolbarOpen(true)}
+            title="Show toolbar"
+            aria-label="Show toolbar"
+            className="h-11 w-11 rounded-full border border-white/10 bg-black/80 p-0 text-white shadow-[0_8px_32px_rgba(255,140,66,0.15)] backdrop-blur-2xl transition-all hover:bg-black hover:text-primary"
+          >
+            <MapIcon className="h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* Processing Indicator */}

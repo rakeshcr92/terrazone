@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -85,8 +85,11 @@ export default function Login() {
     );
   }
 
+  // Successful sign-in / sign-up fires onAuthStateChange above, which sets
+  // `session` and lands the user on the protected product at /app.
+  // (`/` is now the public Geozane landing page.)
   if (session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   return (
@@ -168,6 +171,15 @@ export default function Login() {
 
         <section className="flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-black/75 p-8 shadow-2xl backdrop-blur-xl">
+            {/* Without this the login page is a dead end: there is no way back
+                to the public Geozane site once you land here. */}
+            <Link
+              to="/"
+              className="mb-6 inline-flex items-center gap-2 text-xs text-white/45 transition hover:text-white"
+            >
+              <span aria-hidden>←</span> Back to Geozane
+            </Link>
+
             <div className="mb-8">
               <p className="text-xs uppercase tracking-[0.3em] text-orange-400">
                 Private access

@@ -93,23 +93,26 @@ export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
   return (
     <div ref={searchRef} className="relative w-full">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
         <Input
           type="text"
           placeholder="Search location..."
           value={query}
           onChange={(e) => handleInputChange(e.target.value)}
           onFocus={() => results.length > 0 && setShowResults(true)}
-          className="pl-12 pr-12 h-12 text-base bg-black/40 backdrop-blur-xl border border-white/20 text-white placeholder:text-white/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all rounded-full font-medium"
+          /* w-full + min-w-0 so the input shrinks inside the flex toolbar
+             instead of forcing the row to overflow. Height matches the
+             toolbar buttons (h-9). */
+          className="h-9 w-full min-w-0 rounded-full border border-white/20 bg-black/40 pl-9 pr-9 text-sm font-medium text-white backdrop-blur-xl transition-all placeholder:text-white/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
         />
         {query && (
           <Button
             variant="ghost"
             size="sm"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-white/40 hover:text-white hover:bg-white/10 rounded-full"
+            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 rounded-full p-0 text-white/40 hover:bg-white/10 hover:text-white"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </Button>
         )}
       </div>

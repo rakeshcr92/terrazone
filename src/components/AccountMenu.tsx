@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { LogOut, Shield, UserCircle } from "lucide-react";
+import { Home, LogOut, Shield, UserCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export function AccountMenu() {
@@ -69,6 +70,17 @@ export function AccountMenu() {
           <Shield className="h-4 w-4" />
           Security / MFA coming next
         </button>
+
+        {/* Explicit route back to the public site. Signing out is not the only
+            reason to leave the product. */}
+        <Link
+          to="/"
+          onClick={() => setIsOpen(false)}
+          className="mt-2 flex w-full items-center gap-3 rounded-xl border border-white/10 px-3 py-3 text-left text-sm text-white/80 transition hover:bg-white/5"
+        >
+          <Home className="h-4 w-4" />
+          Back to Geozane home
+        </Link>
 
         <button
           type="button"

@@ -93,14 +93,17 @@ export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
   return (
     <div ref={searchRef} className="relative w-full">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/40" />
         <Input
           type="text"
           placeholder="Search location..."
           value={query}
           onChange={(e) => handleInputChange(e.target.value)}
           onFocus={() => results.length > 0 && setShowResults(true)}
-          className="pl-12 pr-12 h-12 text-base bg-black/40 backdrop-blur-xl border border-white/20 text-white placeholder:text-white/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all rounded-full font-medium"
+          /* w-full + min-w-0 so the input can shrink inside the flex toolbar
+             instead of forcing the row to overflow. Height tracks the toolbar
+             buttons (h-11, h-12 at xl). */
+          className="h-11 w-full min-w-0 rounded-full border border-white/20 bg-black/40 pl-12 pr-12 text-sm font-medium text-white backdrop-blur-xl transition-all placeholder:text-white/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 xl:h-12 xl:text-base"
         />
         {query && (
           <Button

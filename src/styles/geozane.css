@@ -1,0 +1,199 @@
+/*
+ * Geozane public marketing-page styles.
+ *
+ * Ported from the standalone landing-page repo's src/styles.css.
+ *
+ * IMPORTANT: the original file was a Tailwind v4 entrypoint that restyled
+ * `html` and `body` globally. TerraZone is Tailwind v3 and the product app
+ * (/app) relies on its own `bg-background` body styling, so everything that
+ * was global there is scoped to `.gz-page` here. `.gz-page` is applied to the
+ * root element of Landing / Team / Pilot / Book only.
+ *
+ * The Tailwind v4 `@theme inline` color tokens were NOT ported: the landing
+ * components use literal inline `style={{}}` values, not theme utilities.
+ */
+
+.gz-page {
+  color: #faf7f0;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  scroll-behavior: smooth;
+}
+
+.gz-page h1,
+.gz-page h2,
+.gz-page h3 {
+  font-family: "Georgia", "Times New Roman", serif;
+  letter-spacing: -0.02em;
+}
+
+.gz-page h4,
+.gz-page h5,
+.gz-page h6 {
+  font-family: system-ui, sans-serif;
+}
+
+/* The product shell pins html/body/#root to height:100% and the marketing
+   pages are long-scrolling, so allow the scroll container to grow. */
+.gz-page {
+  min-height: 100%;
+}
+
+/* ---------------- Animations ---------------- */
+@keyframes gz-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.3;
+  }
+}
+
+@keyframes gz-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gz-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes gz-spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Referenced by the demo's AnalysisLoading progress bars. This keyframe was
+   missing from the original landing repo's stylesheet, so the bars rendered
+   static; defining it here restores the intended indeterminate animation. */
+@keyframes gz-slide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(150%);
+  }
+}
+
+@keyframes gz-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.gz-fade-up {
+  animation: gz-fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* ---------------- Leaflet dark tweaks ---------------- */
+/* Scoped to .gz-page so the product app's MapLibre styling is untouched. */
+.gz-page .leaflet-container {
+  background: #0c0a07 !important;
+  outline: none;
+}
+
+.gz-page .leaflet-control-zoom a {
+  background: #0d1117 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.gz-page .leaflet-control-attribution {
+  background: rgba(5, 7, 9, 0.7) !important;
+  color: #334155 !important;
+}
+
+.gz-page .leaflet-control-attribution a {
+  color: #64748b !important;
+}
+
+/* ---------------- Scrollbars ---------------- */
+.gz-page ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.gz-page ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gz-page ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+}
+
+.gz-page ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ---------------- Responsive helpers ---------------- */
+.gz-mobile-only {
+  display: none;
+}
+
+.gz-hero-panel {
+  scrollbar-width: none;
+}
+
+.gz-hero-panel::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .gz-desktop-only {
+    display: none !important;
+  }
+
+  .gz-mobile-only {
+    display: block;
+  }
+
+  .gz-hero {
+    grid-template-columns: 1fr !important;
+  }
+
+  .gz-hero > div {
+    padding: 60px 24px !important;
+  }
+
+  .gz-cta-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .gz-cta-grid > div {
+    padding: 24px !important;
+  }
+
+  .gz-cta-grid h2 {
+    font-size: 36px !important;
+  }
+
+  .gz-calendly-wrap {
+    height: 500px !important;
+  }
+
+  .gz-book-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

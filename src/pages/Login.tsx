@@ -85,8 +85,11 @@ export default function Login() {
     );
   }
 
+  // Successful sign-in / sign-up fires onAuthStateChange above, which sets
+  // `session` and lands the user on the protected product at /app.
+  // (`/` is now the public Geozane landing page.)
   if (session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   return (
